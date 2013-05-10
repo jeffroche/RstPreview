@@ -19,18 +19,26 @@ SETTINGS_FILE = 'RstPreview.sublime-settings'
 def rst_to_html(rst_text):
     try:
         from docutils.core import publish_string
-        args = {
-        'stylesheet_path': os.path.join(sublime.packages_path(), 'RstPreview/css/bootstrap.min.css') +
-         ',' + os.path.join(sublime.packages_path(), 'RstPreview/css/base.css')
-        }
-        return publish_string(rst_text, writer_name='html', settings_overrides=args)
     except ImportError:
-        error_msg = """RstPreview requires docutils to be installed for the python interpreter that Sublime uses.
-    run: `sudo easy_install-2.6 docutils` and restart Sublime (if on Mac OS X or Linux). For Windows check the docs at
-    https://github.com/d0ugal/RstPreview"""
+        sys.path.append(os.path.join(sublime.packages_path(),
+                                     'RstPreview', 'docutils-dist'))
+        try:
+            from docutils.core import publish_string
+        except ImportError:
+            error_msg = "There was an error loading docutils.\n"
+                        "To install, run: `sudo easy_install-2.6 docutils` "
+                        "and restart Sublime (if on Mac OS X or Linux). "
+                        "For Windows check the docs at "
+                        "https://github.com/d0ugal/RstPreview"
 
-        sublime.error_message(error_msg)
-        raise
+            sublime.error_message(error_msg)
+            raise
+    args = {'stylesheet_path': os.path.join(
+            sublime.packages_path(), 'RstPreview/css/bootstrap.min.css') +
+            ',' + os.path.join(sublime.packages_path(),
+            'RstPreview/css/base.css')}
+    return publish_string(rst_text, writer_name='html',
+                          settings_overrides=args)
 
 
 def render_in_browser(html):
